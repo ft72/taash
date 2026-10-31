@@ -15,6 +15,7 @@ import { hashPassword, verifyPassword } from '@/lib/auth/password';
 import { invalidateUser } from '@/lib/auth/user-cache';
 import { requireUser } from '@/lib/auth/viewer';
 import { createLimiter } from '@/lib/rate-limit';
+import { renameUser } from '@/lib/server/live';
 
 const g = globalThis;
 const limitAuth = g.__taashAuthLimiter || (g.__taashAuthLimiter = createLimiter({ capacity: 8, perSecond: 0.05 }));
@@ -115,6 +116,7 @@ export async function updateProfileAction(_prev, formData) {
     return { error: 'That username was just taken. Try another.', field: 'handle' };   // unique index race
   }
   invalidateUser(me.userId);
+  await renameUser(me.userId, patch.name, patch.handle || me.handle);
   return { ok: true, name: patch.name, handle: patch.handle || me.handle };
 }
 
